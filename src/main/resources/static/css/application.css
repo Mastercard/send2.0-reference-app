@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css?family=Karla');
+
+body {
+    margin: 2em 0 2em 0;
+    background-color: rgba(242, 242, 242, 0.7);
+    font-family: 'Karla', sans-serif;
+}
+
+.alert {
+    text-align: center;
+    margin: auto auto 1em auto;
+    padding: 1em;
+    width: 85%;
+}
+
+.json {
+    text-align: left;
+    background-color: white;
+    padding: 2em;
+    margin-top: 1em;
+    border-radius: inherit;
+    height: 475px;
+    overflow: auto;
+}
+
+.show {
+    margin: 0.5em;
+}
+
+#close {
+    margin-top: 0;
+}
+
+.info-section-header {
+    text-align: center;
+    background-color: rgb(147, 212, 175);
+    padding: 1em;
+    color: white;
+}
+
+#sender-info-section-header {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+
+.button {
+    color: white;
+    width: 25%;
+    border-radius: 30px;
+    /*color: rgb(255, 126, 0);*/
+    background-color: rgb(147, 212, 175);
+    /*background-color: rgb(147, 207, 175);*/
+    /*font-weight: 700;*/
+    font-size: larger;
+    padding: 10px 0 10px 0;
+    /*background-color: rgba(235, 0, 27, 0.1);*/
+}
+
+.button:hover {
+    color: white;
+    /*color: rgb(235, 0, 27);*/
+    background-color: rgb(147, 196, 175);
+}
+
+.button:active {
+    background-color: rgb(147, 181, 175);
+}

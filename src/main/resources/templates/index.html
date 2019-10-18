@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:white-space="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Send 2.0 Reference Application</title>
+    <link rel="stylesheet" href="../static/css/bootstrap.css" th:href="@{/css/bootstrap.css}"/>
+    <link rel="stylesheet" href="../static/css/application.css" th:href="@{/css/application.css}">
+    <link rel="stylesheet" href="../static/css/form.css" th:href="@{/css/form.css}">
+
+    <script type="application/javascript" th:src="@{/js/jquery-3.3.1.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/jquery-ui.css}">
+    <script type="application/javascript" th:src="@{/js/jquery-ui.js}"></script>
+    <script type="text/javascript" src="../static/js/application.js" th:src="@{/js/application.js}"></script>
+</head>
+
+<body class="container">
+
+<div th:if="${success} != null or ${error} != null">
+
+    <div th:if="${error} != null" class="alert alert-warning" id="error-alert" role="alert">
+        <p th:text="${error}">Error message.</p>
+    </div>
+    <div th:if="${success} != null" class="alert alert-success" id="success-alert" role="alert">
+        <p th:text="${success}">Success message!</p>
+    </div>
+    <div class="alert" role="alert">
+        <button class="btn button show" id="show-request">View request</button>
+        <button class="btn button show" id="show-response">View response</button>
+        <button class="btn button show" id="reload">Reset</button>
+        <div class="json">
+            <button class="close" id="close" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button><br>
+            <div id="request">
+                <pre th:text="${request}">Request</pre>
+            </div>
+            <div id="response">
+                <pre th:text="${response}">Response</pre>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<form id="payment-form" th:action="@{/submitForm}" th:object="${paymentRequestWrapper}" method="post">
+
+
+
+    <div class="info-section-header" id="sender-info-section-header">
+        <h2>Sender Information</h2>
+    </div>
+    <div class="info-section">
+        <div class="form-group form-row">
+            <div class="col">
+                <label for="sender-first-name">First name *</label>
+                <input type="text" th:field="*{senderFirstName}" class="form-control form-input" id="sender-first-name">
+            </div>
+            <div class="col">
+                <label for="sender-last-name">Last name *</label>
+                <input type="text" th:field="*{senderLastName}" class="form-control form-input" id="sender-last-name">
+            </div>
+        </div>
+        <div class="form-group form-row">
+            <div class="col-md-6">
+                <label for="sender-street">Street Address *</label>
+                <input type="text" th:field="*{senderStreet}" class="form-control form-input" id="sender-street">
+            </div>
+            <div class="col-md-3">
+                <label for="sender-city">City *</label>
+                <input type="text" th:field="*{senderCity}" class="form-control form-input" id="sender-city">
+            </div>
+            <div class="col-md-3">
+                <label for="sender-postal-code">Postal code *</label>
+                <input type="text" th:field="*{senderPostalCode}" class="form-control form-input" id="sender-postal-code">
+            </div>
+        </div>
+        <div class="form-group form-row">
+            <div class="col">
+                <label for="sender-country-subdivision">State/Province *</label>
+                <input type="text" th:field="*{senderCountrySubdivision}" class="form-control form-input" id="sender-country-subdivision">
+                <small class="form-text text-muted">Represented as the 2 or 3 letter abbreviation code (e.g. 'MO' for Missouri).</small>
+            </div>
+            <div class="col">
+                <label for="sender-country">Country *</label>
+                <input type="text" th:field="*{senderCountry}" class="form-control form-input" id="sender-country">
+                <small class="form-text text-muted">Represented as the three letter country code (e.g. 'USA').</small>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <div class="col-md-3">
+                    <label for="sender-scheme">Account URI scheme *</label>
+                    <select th:field="*{senderUriScheme}" class="form-control form-input" id="sender-scheme" required>
+                        <option th:each="scheme : ${senderUriSchemes}"
+                                th:value="${scheme}"
+                                th:text="${scheme}">Select..</option>
+                    </select>
+                </div>
+
+                <div class="col-md-9">
+                    <label for="sender-identifier">Identifier *</label>
+                    <input type="text" th:field="*{senderUriIdentifier}" class="form-control form-input" id="sender-identifier" required>
+                </div>
+            </div>
+        </div>
+        <div class="form-group form-row card-details">
+            <div class="col-md-4">
+                <label for="sender-expiry-year">Expiration year *</label>
+                <input type="text" th:field="*{senderUriExpYear}" class="form-control form-input" id="sender-expiry-year" required>
+            </div>
+            <div class="col-md-4">
+                <label for="sender-expiry-month">Expiration month *</label>
+                <input type="text" th:field="*{senderUriExpMonth}" class="form-control form-input" id="sender-expiry-month" required>
+                <small class="form-text text-muted">Represented in two digits (e.g. '05' for May).</small>
+            </div>
+            <div class="col-md-2">
+                <label for="sender-cvc">CVC</label>
+                <input type="text" th:field="*{senderUriCvc}" class="form-control form-input" id="sender-cvc">
+            </div>
+            <div class="col-md-2">
+                <label for="funding-source">Payment Type</label>
+                <select th:field="*{fundingSource}" class="form-control form-input" id="funding-source" required>
+                    <option th:each="source : ${fundingSources}"
+                            th:value="${source}"
+                            th:text="${source}">Select..</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="info-section-header" id="recipient-info-section-header">
+        <h2>Recipient Information</h2>
+    </div>
+    <div class="info-section">
+        <div class="form-group form-row">
+            <div class="col">
+                <label for="recipient-first-name">First name *</label>
+                <input type="text" th:field="*{recipientFirstName}" class="form-control form-input" id="recipient-first-name">
+            </div>
+            <div class="col">
+                <label for="recipient-last-name">Last name *</label>
+                <input type="text" th:field="*{recipientLastName}" class="form-control form-input" id="recipient-last-name">
+            </div>
+        </div>
+        <div class="form-group form-row">
+            <div class="col-md-6">
+                <label for="recipient-street">Street Address *</label>
+                <input type="text" th:field="*{recipientStreet}" class="form-control form-input" id="recipient-street">
+            </div>
+            <div class="col-md-3">
+                <label for="recipient-city">City *</label>
+                <input type="text" th:field="*{recipientCity}" class="form-control form-input" id="recipient-city">
+            </div>
+            <div class="col-md-3">
+                <label for="recipient-postal-code">Postal code *</label>
+                <input type="text" th:field="*{recipientPostalCode}" class="form-control form-input" id="recipient-postal-code">
+            </div>
+        </div>
+        <div class="form-group form-row">
+            <div class="col">
+                <label for="recipient-country-subdivision">State/Province *</label>
+                <input type="text" th:field="*{recipientCountrySubdivision}" class="form-control form-input" id="recipient-country-subdivision">
+                <small class="form-text text-muted">Represented as the 2 or 3 letter abbreviation code (e.g. 'MO' for Missouri).</small>
+            </div>
+            <div class="col">
+                <label for="recipient-country">Country *</label>
+                <input type="text" th:field="*{recipientCountry}" class="form-control form-input" id="recipient-country">
+                <small class="form-text text-muted">Represented as the three letter country code (e.g. 'USA').</small>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <div class="col-md-3">
+                    <label for="recipient-scheme">Account URI scheme *</label>
+                    <select th:field="*{recipientUriScheme}" class="form-control form-input" id="recipient-scheme" required>
+                        <option th:each="scheme : ${recipientUriSchemes}"
+                                th:value="${scheme}"
+                                th:text="${scheme}">Select..</option>
+                    </select>
+                </div>
+                <div class="col-md-9">
+                    <label for="recipient-identifier">Identifier *</label>
+                    <input type="text" th:field="*{recipientUriIdentifier}" class="form-control form-input" id="recipient-identifier" required>
+                </div>
+            </div>
+        </div>
+        <div class="form-group form-row card-details" id="recipient-card-details">
+            <div class="col-md-4">
+                <label for="recipient-expiry-year">Expiration year *</label>
+                <input type="text" th:field="*{recipientUriExpYear}" class="form-control form-input" id="recipient-expiry-year" required>
+            </div>
+            <div class="col-md-4">
+                <label for="recipient-expiry-month">Expiration month *</label>
+                <input type="text" th:field="*{recipientUriExpMonth}" class="form-control form-input" id="recipient-expiry-month" required>
+                <small class="form-text text-muted">Represented in two digits (e.g. '05' for May).</small>
+            </div>
+            <div class="col-md-2">
+                <label for="recipient-cvc">CVC</label>
+                <input type="text" th:field="*{recipientUriCvc}" class="form-control form-input" id="recipient-cvc">
+            </div>
+        </div>
+        <div class="form-group form-row non-card-details" id="recipient-non-card-details">
+            <label for="recipient-name-on-account">Recipient's name on account *</label>
+            <input type="text" th:field="*{recipientNameOnAccount}" class="form-control form-input" id="recipient-name-on-account">
+            <small class="form-text text-muted">Their name exactly as printed on their account.</small>
+        </div>
+    </div>
+
+
+    <div class="info-section-header" id="transfer-acceptor-info-section-header">
+        <h2>Transfer Acceptor Information</h2>
+    </div>
+    <div class="info-section">
+        <div class="form-group form-row">
+            <div class="col-md-6">
+                <label for="transfer-acceptor-name">Name*</label>
+                <input type="text" th:field="*{transferAcceptorName}" class="form-control form-input" id="transfer-acceptor-name">
+            </div>
+            <div class="col-md-6">
+                <label for="transfer-acceptor-id">Id*</label>
+                <input type="text" th:field="*{transferAcceptorId}" class="form-control form-input" id="transfer-acceptor-id">
+            </div>
+
+        </div>
+
+        <div class="form-group form-row">
+            <div class="col-md-3">
+                <label for="transfer-acceptor-terminal-id">Terminal Id*</label>
+                <input type="text" th:field="*{transferAcceptorTerminalId}" class="form-control form-input" id="transfer-acceptor-terminal-id">
+            </div>
+            <div class="col-md-3">
+                <label for="transfer-acceptor-mastercard-id">Mastercard Assigned Id*</label>
+                <input type="text" th:field="*{transferAcceptorMastercardAssignedId}" class="form-control form-input" id="transfer-acceptor-mastercard-id">
+            </div>
+            <div class="col-md-3">
+                <label for="transfer-acceptor-payment-facilitator-id">Payment Facilitator Id *</label>
+                <input type="text" th:field="*{transferAcceptorPaymentFacilitatorId}" class="form-control form-input" id="transfer-acceptor-payment-facilitator-id">
+            </div>
+            <div class="col-md-3">
+                <label for="transfer-acceptor-submerchant-id">Sub-Merchant Id  *</label>
+                <input type="text" th:field="*{transferAcceptorSubMerchantId}" class="form-control form-input" id="transfer-acceptor-submerchant-id">
+            </div>
+        </div>
+        <div class="form-group form-row">
+            <div class="col-md-6">
+                <label for="transfer-acceptor-street">Street Address *</label>
+                <input type="text" th:field="*{transferAcceptorStreet}" class="form-control form-input" id="transfer-acceptor-street">
+            </div>
+            <div class="col-md-3">
+                <label for="transfer-acceptor-city">City *</label>
+                <input type="text" th:field="*{transferAcceptorCity}" class="form-control form-input" id="transfer-acceptor-city">
+            </div>
+            <div class="col-md-3">
+                <label for="transfer-acceptor-postal-code">Postal code *</label>
+                <input type="text" th:field="*{transferAcceptorPostalCode}" class="form-control form-input" id="transfer-acceptor-postal-code">
+            </div>
+        </div>
+        <div class="form-group form-row">
+            <div class="col">
+                <label for="transfer-acceptor-country-subdivision">State/Province *</label>
+                <input type="text" th:field="*{transferAcceptorCountrySubdivision}" class="form-control form-input" id="transfer-acceptor-country-subdivision">
+                <small class="form-text text-muted">Represented as the 2 or 3 letter abbreviation code (e.g. 'MO' for Missouri).</small>
+            </div>
+            <div class="col">
+                <label for="transfer-acceptor-country">Country *</label>
+                <input type="text" th:field="*{transferAcceptorCountry}" class="form-control form-input" id="transfer-acceptor-country">
+                <small class="form-text text-muted">Represented as the three letter country code (e.g. 'USA').</small>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="info-section-header" id="acquiring-credentials-info-section-header">
+        <h2>Acquiring Credentials</h2>
+    </div>
+    <div class="info-section">
+        <div class="form-group form-row">
+            <div class="col-md-6">
+                <label for="acquiring-ica">Acquiring ICA*</label>
+                <input type="text" th:field="*{acquiringICA}" class="form-control form-input" id="acquiring-ica">
+            </div>
+            <div class="col-md-6">
+                <label for="acquiring-bin">Acquiring BIN*</label>
+                <input type="text" th:field="*{acquiringBIN}" class="form-control form-input" id="acquiring-bin">
+            </div>
+        </div>
+
+        <div class="form-group form-row">
+            <div class="col-md-4">
+                <label for="acquiring-identification-code">Acquiring Identification Code*</label>
+                <input type="text" th:field="*{acquiringIdentificationCode}" class="form-control form-input" id="acquiring-identification-code">
+            </div>
+            <div class="col-md-4">
+                <label for="acquiring-processor-id">Processor Id*</label>
+                <input type="text" th:field="*{acquiringProcessorId}" class="form-control form-input" id="acquiring-processor-id">
+            </div>
+            <div class="col-md-4">
+                <label for="acquiring-country">Acquiring Country *</label>
+                <input type="text" th:field="*{acquiringCountry}" class="form-control form-input" id="acquiring-country">
+            </div>
+        </div>   
+    </div>
+
+
+    <div class="info-section-header">
+        <h2>Payment Information</h2>
+    </div>
+    <div class="info-section">
+        <div class="form-group form-row">
+            <div class="col-md-6">
+                <label for="payment-type">Payment Type*</label>
+                <input type="text" th:field="*{paymentType}" class="form-control form-input" id="payment-type" required>
+            </div>
+            <div class="col-md-6">
+                <label for="merchant-category-code">Merchant Category Code*</label>
+                <input type="text" th:field="*{merchantCategoryCode}" class="form-control form-input" id="merchant-category-code" required>
+            </div>
+        </div>
+        <div class="form-group form-row">
+            <div class="col-md-6">
+                <label for="amount">Amount *</label>
+                <input type="text" th:field="*{amount}" class="form-control form-input" id="amount" required>
+            </div>
+            <div class="col-md-6">
+                <label for="currency">Currency *</label>
+                <input type="text" th:field="*{currency}" class="form-control form-input" id="currency" required>
+                <small class="form-text text-muted">Represented as the three digit currency code (e.g. 'USD').</small>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="submit">
+        <button type="submit" class="btn button">Submit</button>
+    </div>
+</form>
+</body>
+</html>

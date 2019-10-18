@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.1.6.RELEASE</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+
+	<groupId>mastercard.api</groupId>
+	<artifactId>send-2.0</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>send-2.0</name>
+
+	<description>Demo project for Spring Boot</description>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>3.3.4</version>
+				<executions>
+					<execution>
+						<id> Send 2.0 Payments API</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>${project.basedir}/src/main/resources/send-api-payments-swaggerfinal.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<!-- No "library" element here means the plugin will use the default library template ("okhttp-gson") -->
+							<configOptions>
+								<sourceFolder>src/gen/java/main</sourceFolder>
+							</configOptions>
+						</configuration>
+					</execution>
+					<execution>
+						<id> Send 2.0 Transfer Eligibility API</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>${project.basedir}/src/main/resources/send-api-transfer-eligibility-swagger.yaml</inputSpec>
+							<generatorName>java</generatorName>
+							<configOptions>
+								<sourceFolder>src/gen/java/main</sourceFolder>
+							</configOptions>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<properties>
+		<java.version>1.8</java.version>
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+		<maven.compiler.target>${java.version}</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<!-- Dependencies used by the generated sources -->
+		<gson-fire-version>1.8.0</gson-fire-version>
+		<swagger-core-version>1.5.18</swagger-core-version>
+		<okhttp-version>2.7.5</okhttp-version>
+		<gson-version>2.8.1</gson-version>
+		<threetenbp-version>1.3.5</threetenbp-version>
+		<junit-version>4.12</junit-version>
+		<oauth1-signer-version>1.2.3</oauth1-signer-version>
+
+	</properties>
+
+
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>${swagger-core-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.squareup.okhttp</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>${okhttp-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.squareup.okhttp</groupId>
+			<artifactId>logging-interceptor</artifactId>
+			<version>${okhttp-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>${gson-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.gsonfire</groupId>
+			<artifactId>gson-fire</artifactId>
+			<version>${gson-fire-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.oltu.oauth2</groupId>
+			<artifactId>org.apache.oltu.oauth2.client</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.threeten</groupId>
+			<artifactId>threetenbp</artifactId>
+			<version>${threetenbp-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.mastercard.developer</groupId>
+			<artifactId>oauth1-signer</artifactId>
+			<version>${oauth1-signer-version}</version> <!-- See: https://github.com/Mastercard/oauth1-signer-java/releases -->
+		</dependency>
+
+
+	</dependencies>
+
+
+</project>

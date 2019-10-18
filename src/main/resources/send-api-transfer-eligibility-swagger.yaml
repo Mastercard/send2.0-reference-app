@@ -1,0 +1,567 @@
+openapi: 3.0.0
+info:
+  title: Transfer Eligibility API
+  description: You can use this API to check whether a Mastercard account is allowed to send or receive fund transfers.
+  version: "0.1"
+
+servers:
+  - url: https://sandbox.api.mastercard.com
+    description: Sandbox URL
+
+paths:
+  "/send/partners/{partner_Id}/transfer-eligibility":
+    post:
+      tags:
+        - Transfer Eligibility
+      summary: Check whether a Mastercard account is allowed to send or receive fund transfers.
+      operationId: checkTransferEligibilityUsingPOST
+      parameters:
+        - name: partner_Id
+          in: path
+          description: The Mastercard-assigned unique ID for the partner registered to use Mastercard Send.
+          example: "123456"
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: X-Encrypted
+          schema:
+            type: boolean
+          description: The value of this header depends on encryption preferences set when onboarding the partner. This header should not be provided if encryption is disabled for the partner. The header must be 'true' if encryption is 'enabled' for the partner (i.e. required). The header can be 'true' or 'false' if encryption is 'flexible' for the partner.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/transferEligibilityRequest"
+        description: transferEligibilityRequest
+        required: true
+      responses:
+        "200":
+          description: OK.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferEligibilityResponse"
+
+        "400":
+          description: BAD REQUEST. Returns an array of errors when request fields are invalid.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - "Errors"
+                properties:
+                  Errors:
+                    type: object
+                    required:
+                      - "Error"
+                    properties:
+                      Error:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+
+                            Description:
+                              type: string
+                              description: Describes the error. Present if more information is available than that provided by the `ReasonCode` field.
+                              example: "Invalid value"
+                            Recoverable:
+                              type: boolean
+                              description: "Indicates whether the transaction can be recovered (might be successful) if the failed request is resubmitted. Valid values: true, false."
+                              example: "false"
+                            Source:
+                              type: string
+                              description: Where possible, identifies the field that is causing the error, for example an incorrectly formatted field or a missing required field. If the error is not associated with a specific field, system error is returned.
+                              example: "currency"
+                            ErrorDetailCode:
+                              type: string
+                              description: "The error code, see [Error Codes](../error-codes)."
+                              example: "08200"
+                            ReasonCode:
+                              type: string
+                              description: "The general cause of the error, see [Error Codes](../error-codes)."
+                              example: "INVALID_INPUT_VALUE"
+        "500":
+          description: INTERNAL SERVER ERROR (system error).
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - "Errors"
+                properties:
+                  Errors:
+                    type: object
+                    required:
+                      - "Error"
+                    properties:
+                      Error:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Description:
+                              type: string
+                              description: Describes the error. Present if more information is available than that provided by the `ReasonCode` field.
+                            Recoverable:
+                              type: boolean
+                              description: "Indicates whether the transaction can be recovered (might be successful) if the failed request is resubmitted. Valid values: true, false."
+                              example: "true"
+
+                            Source:
+                              type: string
+                              description: Where possible, identifies the field that is causing the error, for example an incorrectly formatted field or a missing required field. If the error is not associated with a specific field, system error is returned.
+                            ReasonCode:
+                              type: string
+                              description: "The general cause of the error, see [Error Codes](../error-codes)."
+                              example: "SYSTEM_ERROR"
+components:
+  requestBodies:
+    handleUsingPOSTBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+
+    handleUsingGETBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+      description: body
+  schemas:
+    ReceivingEligibility:
+      type: object
+      description: This object provides details of the Recipient’s account, including whether it is eligible to receive the funds identified in the request.
+      properties:
+        accountStatementCurrency:
+          type: string
+          description: "The 3-character ISO 4217 alpha-3 code identifying the accountholder statement currency. See [Currency Codes](https://developer.mastercard.com/page/iso-4217-currency-codes). For example, for U.S. Dollars, the value is USD."
+          example: "USD"
+        brand:
+          type: string
+          description: "The brand of receiving account. Valid values: MASTERCARD, partner."
+          example: "MASTERCARD"
+        eligible:
+          type: boolean
+          description: Indicates whether the account is eligible to receive the funds.
+        enablementIndicator:
+          type: string
+          description: "Indicates the type of transactions that the account is enabled to receive. Valid values:
+
+          * D = Domestic only
+
+          * Y = Cross-border and domestic
+
+          * U = Undefined/unknown; transactions not prohibited"
+          example: "D"
+        fundsAvailability:
+          type: string
+          description: "An estimate of when the funds might be available. Valid values: IMMEDIATE, NEXT_BUSINESS_DAY, TWO_TO_FIVE_BUSINESS_DAYS."
+          example: "IMMEDIATE"
+        institutionCountry:
+          type: string
+          description: "The 3-character ISO 3166-1 alpha-3 country code for the financial institution associated with the account; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes)."
+          example: "USA"
+        institutionName:
+          type: string
+          description: The name of the financial institution associated with the account.
+          example: "ABC BANK"
+        processingType:
+          type: string
+          description: "Information about how the transaction can be processed. Valid values: SINGLE, DUAL, BOTH, NA."
+          example: "SINGLE"
+        productType:
+          type: string
+          description: "Indicates whether the account is a consumer or commercial account. Valid values: CONSUMER, COMMERCIAL."
+          example: "CONSUMER"
+        reasonCode:
+          type: string
+          description: "Present if the account is not eligible to receive the funds. Provides one of the following reason codes:
+
+          * PARTNER_DAILY_LIMIT
+
+          * MAX_TRANSACTION_LIMIT
+
+          * MIN_TRANSACTION_LIMIT
+
+          * CONS_MONTHLY_TRAN_LIMIT
+
+          * MAX_TRAN_TYPE_LIMIT
+
+          * MIN_TRAN_TYPE_LIMIT
+
+          * ACCOUNT_TYPE
+
+          * ACCOUNT_NOT_ELIGIBLE
+
+          * NETWORK_NOT_ELIGIBLE
+
+          * CURRENCY_NOT_SUPPORTED"
+          example: "PARTNER_DAILY_LIMIT"
+        reasonDescription:
+          type: string
+          description: "Present if the account is not eligible to receive the funds. Provides one of the following reason descriptions (each one here is preceded by the associated `reasonCode`):
+
+          * PARTNER_DAILY_LIMIT = Partner has exceeded the daily limit configured in the system
+
+          * MAX_TRANSACTION_LIMIT = Per transaction maximum amount limit reached
+
+          * MIN_TRANSACTION_LIMIT = Transaction Amount is less than the minimum configured for the partner
+
+          * CONS_MONTHLY_TRAN_LIMIT = Consumer has exceeded the monthly limit configured in the system
+
+          * MAX_TRAN_TYPE_LIMIT = Per transaction maximum amount limit reached for the transaction type
+
+          * MIN_TRAN_TYPE_LIMIT = Amount is less than the minimum allowed for the transaction type
+
+          * ACCOUNT_TYPE = Account Type not supported for the partner
+
+          * ACCOUNT_NOT_ELIGIBLE = Account not eligible
+
+          * NETWORK_NOT_ELIGIBLE = Partner not on boarded for the network to reach the account
+
+          * CURRENCY_NOT_SUPPORTED = Currency is not supported for the account"
+          example: "Partner has exceeded the daily limit configured in the system"
+        type:
+          type: string
+          description: "The type of receiving account. Valid values: CREDIT, DEBIT, PREPAID, COMBO, UNKNOWN."
+          example: "CREDIT"
+        acceptanceBrand:
+          type: string
+          maximum: 3
+          description: "Acceptance brand code for the account. Valid values: DMC, MCC and MSI"
+          example: "MSI"
+        brandCode:
+          type: string
+          maximum: 3
+          description: "Brand product code for the account. Valid values: MDG, MDT, MCG, MEC, MPP, MDP, MDU and MSI"
+          example: "MSB"
+        issuingICA:
+          type: string
+          minimum: 4
+          maximum: 6
+          description: "ICA of the financial institution associated to the account."
+          example: "999001"
+
+    SendingEligibility:
+      type: object
+      description: This object is present if the Sender Account URI was provided in the API request. It provides details of the Sender’s account, including whether it is eligible to send the funds identified in the request.
+      properties:
+        accountStatementCurrency:
+          type: string
+          description: "The 3-character ISO 4217 alpha-3 code identifying the accountholder statement currency. See [Currency Codes](https://developer.mastercard.com/page/iso-4217-currency-codes). For example, for U.S. Dollars, the value is USD."
+          example: "USD"
+        brand:
+          type: string
+          description: "The brand of sending account. Valid values: MASTERCARD, partner."
+          example: "MASTERCARD"
+        eligible:
+          type: boolean
+          description: Indicates whether the account is eligible to send the funds.
+        enablementIndicator:
+          type: string
+          description: "Indicates the type of transactions that the account is enabled to send. Valid values:
+
+          * D = Domestic only
+
+          * Y = Cross-border and domestic
+
+          * U = Undefined/unknown; transactions not prohibited"
+          example: "D"
+        institutionCountry:
+          type: string
+          description: "The 3-character ISO 3166-1 alpha-3 country code for the financial institution associated with the account; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes)."
+          example: "USA"
+        institutionName:
+          type: string
+          description: The name of the financial institution associated with the account.
+          example: "ABC BANK"
+        processingType:
+          type: string
+          description: "Information about how the transaction can be processed. Valid values: SINGLE, DUAL, BOTH, NA."
+          example: "SINGLE"
+        productType:
+          type: string
+          description: "Indicates whether the account is a consumer or commercial account. Valid values: CONSUMER, COMMERCIAL."
+          example: "CONSUMER"
+        reasonCode:
+          type: string
+          description: "Present if the account is not eligible to send the funds. Provides one of the following reason codes:
+
+          * PARTNER_DAILY_LIMIT
+
+          * MAX_TRANSACTION_LIMIT
+
+          * MIN_TRANSACTION_LIMIT
+
+          * CONS_MONTHLY_TRAN_LIMIT
+
+          * MAX_TRAN_TYPE_LIMIT
+
+          * MIN_TRAN_TYPE_LIMIT
+
+          * ACCOUNT_TYPE
+
+          * ACCOUNT_NOT_ELIGIBLE
+
+          * NETWORK_NOT_ELIGIBLE
+
+          * CURRENCY_NOT_SUPPORTED"
+          example: "PARTNER_DAILY_LIMIT"
+        reasonDescription:
+          type: string
+          description: "Present if the account is not eligible to send the funds. Provides one of the following reason descriptions (each one here is preceded by the associated `reasonCode`):
+
+          * PARTNER_DAILY_LIMIT = Partner has exceeded the daily limit configured in the system
+
+          * MAX_TRANSACTION_LIMIT = Per transaction maximum amount limit reached
+
+          * MIN_TRANSACTION_LIMIT = Transaction Amount is less than the minimum configured for the partner
+
+          * CONS_MONTHLY_TRAN_LIMIT = Consumer has exceeded the monthly limit configured in the system
+
+          * MAX_TRAN_TYPE_LIMIT = Per transaction maximum amount limit reached for the transaction type
+
+          * MIN_TRAN_TYPE_LIMIT = Amount is less than the minimum allowed for the transaction type
+
+          * ACCOUNT_TYPE = Account Type not supported for the partner
+
+          * ACCOUNT_NOT_ELIGIBLE = Account not eligible
+
+          * NETWORK_NOT_ELIGIBLE = Partner not on boarded for the network to reach the account
+
+          * CURRENCY_NOT_SUPPORTED = Currency is not supported for the account"
+          example: "Partner has exceeded the daily limit configured in the system"
+        type:
+          type: string
+          description: "The type of sending account. Valid values: CREDIT, DEBIT, PREPAID, COMBO, UNKNOWN."
+          example: "DEBIT"
+        acceptanceBrand:
+          type: string
+          maximum: 3
+          description: "Acceptance brand code for the account. Valid values: DMC, MCC and MSI"
+          example: "MSI"
+        brandCode:
+          type: string
+          maximum: 3
+          description: "Brand product code for the account. Valid values: MDG, MDT, MCG, MEC, MPP, MDP, MDU and MSI"
+          example: "MSB"
+        issuingICA:
+          type: string
+          minimum: 4
+          maximum: 6
+          description: "ICA of the financial institution associated to the account."
+          example: "999001"
+
+    TransferEligibility:
+      type: object
+      description: This object is present if the Sender Account URI was provided in the API request. It provides the complete eligibility of the funds transfer service between the Sender and the Recipient.
+      properties:
+        eligible:
+          type: boolean
+          description: Identifies whether both the Sender can send the funds and the Recipient can receive the funds.
+
+    TransferEligibilityResponse:
+      type: object
+      properties:
+        receivingEligibility:
+          $ref: "#/components/schemas/ReceivingEligibility"
+        sendingEligibility:
+          $ref: "#/components/schemas/SendingEligibility"
+        transferEligibility:
+          $ref: "#/components/schemas/TransferEligibility"
+      title: TransferEligibilityResponse
+
+    additionalProgramData:
+      type: object
+      description: This object contains data required for cross-network programs. Contact your Mastercard representative for assistance.
+      properties:
+        crossNetwork:
+          $ref: "#/components/schemas/crossNetwork"
+    crossNetwork:
+      type: object
+      properties:
+        walletProviderSignature:
+          type: string
+          minimum: 1
+          maximum: 2058
+          example: "ABCadsfab3g2gasdg"
+    transferEligibilityRequest:
+      type: object
+      required:
+        - receiverAccountUri
+        - paymentType
+        - acquirerCountry
+        - transferAcceptorCountry
+        - additionalProgramData
+      properties:
+        acquirerCountry:
+          type: string
+          description: "The 3-digit ISO 3166-1 alpha-3 country code of the Bank Identification Number (BIN) under which the acquiring member is registered with Mastercard; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes). This code is used to determine if the eligibility is for domestic or cross-border transactions."
+          maximum: 3
+          example: "USA"
+        additionalProgramData:
+          $ref: "#/components/schemas/additionalProgramData"
+
+        amount:
+          type: string
+          description: The transaction amount, in the currency identified by the `currency` field. The decimal point is implied based on the currency. For example, a $1 transaction will be a value of 100.
+          minimum: 1
+          maximum: 12
+          example: "10000"
+
+        crossBorderEligible:
+          type: string
+          description: "Indicates whether the transaction is cross-border (Y) or domestic (N, the default if not supplied). Valid values: Y, N."
+          example: "N"
+        currency:
+          type: string
+          description: "The 3-character ISO 4217 alpha-3 code identifying the currency for the transaction amount in the `amount` field. See [Currency Codes](https://developer.mastercard.com/page/iso-4217-currency-codes). For example, for U.S. Dollars, the value is USD."
+          example: "USD"
+
+        paymentType:
+          type: string
+          description: "The appropriate payment type for the funds transfer taking place. Valid values:
+
+          * A2A = Account to account
+
+          * ACO = Agent cash out
+
+          * AMS = Acquirer Merchant Settlement
+
+          * B2C = Merchant disbursement
+
+          * BDB = Funds disbursement (general)
+
+          * CBP = Card bill payment
+
+          * G2C = Disbursement (Government/Development Organization to consumer)
+
+          * GDB = Government disbursement
+
+          * P2M = Merchant payment
+
+          * P2P = Person to person
+
+          * PSM = Person to small merchant"
+          example: "P2P"
+        recipientAccountUri:
+          type: string
+          required:
+            - schema
+            - account-number
+            - exp
+          description: "URI identifying the receiving account. URI scheme can be PAN or RAW. Construct the URI string using the following properties and values. Start with `schema:account-number` and append subsequent `property=value` couplets using a semi-colon (;) separator.
+
+          * schema = A 3-character alpha code identifying the type of account number. Valid values:
+
+            <br>– pan = PAN or token
+
+            <br>– raw = Deposit account or generic account number that is not a PAN
+
+          * account-number = The account number. Can be up to 20 digits. For PAN or token, the value should be 16 digits.
+
+          * exp = The expiration date, in format YYYY-MM, for example 2020-10. Required for pan schema.
+
+          * cvc = The Card Verification Code (CVC).
+
+          * ucaf = The Universal Cardholder Authentication Field (UCAF).
+
+          * cavv = The Cardholder Authentication Verification Value (CAVV).
+
+          * cryptogramType = Valid values:
+
+            <br>– CONTACTLESS_CHIP = The shared cryptogram is the result of a contactless tap and chip information is read by the terminal
+
+            <br>– CONTACTLESS_MAGSTRIPE = The shared cryptogram is the result of a contactless tap and the magstripe information is read by the terminal
+
+            <br>– DSRP_UCAF = The shared cryptogram is the result of an in-app purchase and chip information to be passed is in the UCAF field
+
+            <br>– DSRP_CHIP = The shared cryptogram is the result of an in-app purchase using EMV data
+
+          * cryptogramValue = The cryptogram, in one of the following formats, depending on the `cryptogramType`. Required for pan schema:
+
+            <br>– CONTACTLESS_CHIP or CONTACTLESS_MAGSTRIPE: Hexadecimal [A-F0-9], 2–510 characters length
+
+            <br>– DSRP_UCAF: Base64 [A-Za-z0-9+/=?:], 1–510 characters length
+
+            <br>– DSRP_CHIP: Hexadecimal [A-F0-9], 2–510 characters length
+
+          * panSequenceNumber = The PAN Sequence Number, which distinguishes among separate cards having the same PAN. Processors with chip-reading capability may pass this information for Contactless Chip and Contactless Magstripe transactions."
+
+          example: "pan:5111222233334444;exp=2020-10;cvc=123;ucaf=ABC;cavv=123;cryptogramType=DSRP_CHIP;cryptogramValue=341341341;panSequenceNumber=01"
+
+        senderAccountUri:
+          type: string
+          required:
+            - schema
+            - account-number
+            - exp
+          description: "URI identifying the sending account. URI scheme can be PAN or RAW. Construct the URI string using the following properties and values. Start with `schema:account-number` and append subsequent `property=value` couplets using a semi-colon (;) separator.
+
+          * schema = A 3-character alpha code identifying the type of account number. Valid values:
+
+            <br>– pan = PAN or token
+
+            <br>– raw = Deposit account or generic account number that is not a PAN
+
+          * account-number = The account number. Can be up to 20 digits. For PAN or token, the value should be 16 digits.
+
+          * exp = The expiration date, in format YYYY-MM, for example 2020-10. Required for pan schema.
+
+          * cvc = The Card Verification Code (CVC).
+
+          * ucaf = The Universal Cardholder Authentication Field (UCAF).
+
+          * cavv = The Cardholder Authentication Verification Value (CAVV).
+
+          * cryptogramType = Valid values:
+
+            <br>– CONTACTLESS_CHIP = The shared cryptogram is the result of a contactless tap and chip information is read by the terminal
+
+            <br>– CONTACTLESS_MAGSTRIPE = The shared cryptogram is the result of a contactless tap and the magstripe information is read by the terminal
+
+            <br>– DSRP_UCAF = The shared cryptogram is the result of an in-app purchase and chip information to be passed is in the UCAF field
+
+            <br>– DSRP_CHIP = The shared cryptogram is the result of an in-app purchase using EMV data
+
+          * cryptogramValue = The cryptogram, in one of the following formats, depending on the `cryptogramType`. Required for pan schema:
+
+            <br>– CONTACTLESS_CHIP or CONTACTLESS_MAGSTRIPE: Hexadecimal [A-F0-9], 2–510 characters length
+
+            <br>– DSRP_UCAF: Base64 [A-Za-z0-9+/=?:], 1–510 characters length
+
+            <br>– DSRP_CHIP: Hexadecimal [A-F0-9], 2–510 characters length
+
+          * panSequenceNumber = The PAN Sequence Number, which distinguishes among separate cards having the same PAN. Processors with chip-reading capability may pass this information for Contactless Chip and Contactless Magstripe transactions."
+
+          example: "pan:5111222233334444;exp=2020-10;cvc=123;ucaf=ABC;cavv=123;cryptogramType=DSRP_CHIP;cryptogramValue=341341341;panSequenceNumber=01"
+
+        transferAcceptorCountry:
+          type: string
+          description: "The 3-character ISO 3166-1 alpha-3 code for the country of the merchant/originator who is providing the funds transfer service to the Sender; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes). Mastercard uses this field to determine if the transaction is domestic or cross-border."
+          maximum: 3
+          example: "USA"
+      title: transferEligibilityRequest

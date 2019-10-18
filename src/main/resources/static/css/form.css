@@ -1,0 +1,36 @@
+form {
+    width: 85%;
+    padding-bottom: 2em;
+    margin: auto;
+    /*padding: 1em 2em 1em 2em;*/
+    /*margin: 2em 0 2em 0;*/
+    border-radius: 5px;
+    background-color: white;
+}
+
+.form-input {
+    /*border: 0px;*/
+    /*border-width: 2px;*/
+    border-radius: 5px;
+    outline: none;
+    /*background-color: rgba(247, 158, 27, 0.1);*/
+}
+
+.form-input:hover,
+.form-input:focus {
+    border-color: rgb(147, 179, 175);
+    /*outline-width: 0;*/
+    /*background-color: rgba(255, 126, 27, 0.2);*/
+}
+
+.info-section {
+    margin: 25px;
+    padding: 0 2em 0.5em 2em;
+    /*padding-bottom: 1em;*/
+    /*padding: 2em 2em 1em 2em;*/
+}
+
+.submit {
+    text-align: center;
+    padding-top:2em;
+}

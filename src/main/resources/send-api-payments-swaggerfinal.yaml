@@ -1,0 +1,1239 @@
+openapi: 3.0.0
+info:
+  title: Payments API
+  description: You can use this API to create a payment transaction to transfer funds to a Recipient (POST) and search for details of a payment transaction (POST).
+  version: "1.0.0"
+  contact:
+    name: Push Payments Team
+    email: apisupport@mastercard.com
+
+servers:
+  - url: https://sandbox.api.mastercard.com
+    description: Sandbox URL
+
+
+paths:
+  "/send/partners/{partner_id}/payments":
+    post:
+      tags:
+        - Payments
+      summary: Create a payment transaction to transfer funds to a Recipient.
+      operationId: createPaymentUsingPOST
+      parameters:
+        - in: path
+          name: partner_id
+          description: The Mastercard-assigned unique ID for the partner registered to use Mastercard Send.
+          example: "123456"
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: repeat_flag
+          schema:
+            type: boolean
+          description: This flag should be set to 'true' if this request is a repeat of a previous request.
+        - in: header
+          name: X-Encrypted
+          schema:
+            type: boolean
+          description: The value of this header depends on encryption preferences set when onboarding the partner. This header should not be provided if encryption is disabled for the partner. The header must be 'true' if encryption is 'enabled' for the partner (i.e. required). The header can be 'true' or 'false' if encryption is 'flexible' for the partner.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/paymentRequest"
+        description: paymentRequest
+        required: true
+      responses:
+        '200':
+          description: OK. Returned by static API when the data for the transaction is valid and amount > 50.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/paymentResponse"
+
+        '400':
+          description: BAD REQUEST. Returns an array of errors when request fields are invalid.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - "Errors"
+                properties:
+                  Errors:
+                    type: object
+                    required:
+                      - "Error"
+                    properties:
+                      Error:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Description:
+                              type: string
+                              description: Describes the error. Present if more information is available than that provided by the `ReasonCode` field.
+                              example: "Invalid value"
+                            Recoverable:
+                              type: boolean
+                              description: "Indicates whether the transaction can be recovered (might be successful) if the failed request is resubmitted. Valid values: true, false."
+                              example: "false"
+                            Source:
+                              type: string
+                              description: Where possible, identifies the field that is causing the error, for example an incorrectly formatted field or a missing required field. If the error is not associated with a specific field, system error is returned.
+                              example: "currency"
+                            ErrorDetailCode:
+                              type: string
+                              description: "The error code, see [Error Codes](../error-codes)."
+                              example: "08200"
+                            ReasonCode:
+                              type: string
+                              description: "The general cause of the error, see [Error Codes](../error-codes)."
+                              example: "INVALID_INPUT_VALUE"
+        '402':
+          description: REQUEST FAILED. Transfer declined. Returned by static API when amount is provided as 1, 4, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 49. When receiver account is provided as 5008533529008683.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - "Errors"
+                properties:
+                  Errors:
+                    type: object
+                    required:
+                      - "Error"
+                    properties:
+                      Error:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Description:
+                              type: string
+                              description: Describes the error. Present if more information is available than that provided by the `ReasonCode` field.
+                            Recoverable:
+                              type: boolean
+                              description: "Indicates whether the transaction can be recovered (might be successful) if the failed request is resubmitted. Valid values: true, false."
+                            Source:
+                              type: string
+                              description: Where possible, identifies the field that is causing the error, for example an incorrectly formatted field or a missing required field. If the error is not associated with a specific field, system error is returned.
+                            ErrorDetailCode:
+                              type: string
+                              description: "The error code, see [Error Codes](../error-codes)."
+                            ReasonCode:
+                              type: string
+                              description: "The general cause of the error, see [Error Codes](../error-codes)."
+        '409':
+          description: CONFLICT. Returns an array of errors when the transaction reference ID has been used in last 24 hours.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - "Errors"
+                properties:
+                  Errors:
+                    type: object
+                    required:
+                      - "Error"
+                    properties:
+                      Error:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Description:
+                              type: string
+                              description: Describes the error. Present if more information is available than that provided by the `ReasonCode` field.
+                            Recoverable:
+                              type: boolean
+                              description: "Indicates whether the transaction can be recovered (might be successful) if the failed request is resubmitted. Valid values: true, false."
+                            Source:
+                              type: string
+                              description: Where possible, identifies the field that is causing the error, for example an incorrectly formatted field or a missing required field. If the error is not associated with a specific field, system error is returned.
+                            ErrorDetailCode:
+                              type: string
+                              description: "The error code, see [Error Codes](../error-codes)."
+                            ReasonCode:
+                              type: string
+                              description: "The general cause of the error, see [Error Codes](../error-codes)."
+        '500':
+          description: INTERNAL SERVER ERROR (system error). Returned by static API when amount is provided as 2.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - "Errors"
+                properties:
+                  Errors:
+                    type: object
+                    required:
+                      - "Error"
+                    properties:
+                      Error:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Description:
+                              type: string
+                              description: Describes the error. Present if more information is available than that provided by the `ReasonCode` field.
+                            Recoverable:
+                              type: boolean
+                              description: "Indicates whether the transaction can be recovered (might be successful) if the failed request is resubmitted. Valid values: true, false."
+                              example: "true"
+                            Source:
+                              type: string
+                              description: Where possible, identifies the field that is causing the error, for example an incorrectly formatted field or a missing required field. If the error is not associated with a specific field, system error is returned.
+                            ReasonCode:
+                              type: string
+                              description: "The general cause of the error, see [Error Codes](../error-codes)."
+                              example: "SYSTEM_ERROR"
+
+  "/send/partners/{partner_id}/payments/searches":
+    post:
+      operationId: retrievePaymentInfoUsingPOST
+      tags:
+        - Search
+      summary: Retrieve details of a payment transaction.
+      parameters:
+        - in: path
+          name: partner_id
+          description: The Mastercard-assigned unique ID for the partner registered to use Mastercard Send.
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: X-Encrypted
+          schema:
+            type: boolean
+          description: The value of this header depends on encryption preferences set when onboarding the partner. This header should not be provided if encryption is disabled for the partner. The header must be 'true' if encryption is 'enabled' for the partner (i.e. required). The header can be 'true' or 'false' if encryption is 'flexible' for the partner.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/paymentSearch"
+      responses:
+        '200':
+          description: OK. Returns payment transaction details for the provided transaction reference ID.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/payments"
+
+        '404':
+          description: NOT FOUND. Returns an array of errors when no payment transactions can be found for the provided transaction reference ID.
+          headers:
+            correlation-id:
+              schema:
+                type: string
+              description: ID for research purposes to uniquely identify the transaction within Mastercard.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - "Errors"
+                properties:
+                  Errors:
+                    type: object
+                    required:
+                      - "Error"
+                    properties:
+                      Error:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+
+                            Description:
+                              type: string
+                              description: Describes the error. Present if more information is available than that provided by the `ReasonCode` field.
+                            Recoverable:
+                              type: boolean
+                              description: "Indicates whether the transaction can be recovered (might be successful) if the failed request is resubmitted. Valid values: true, false."
+                            Source:
+                              type: string
+                              description: Where possible, identifies the field that is causing the error, for example an incorrectly formatted field or a missing required field. If the error is not associated with a specific field, system error is returned.
+                            ErrorDetailCode:
+                              type: string
+                              description: "The error code, see [Error Codes](../error-codes)."
+                            ReasonCode:
+                              type: string
+                              description: "The general cause of the error, see [Error Codes](../error-codes)."
+components:
+  schemas:
+    Payments:
+      type: object
+      properties:
+        itemCount:
+          type: integer
+          format: int64
+          example: 1
+        resourceType:
+          type: string
+          example: "list"
+        data:
+          $ref: "#/components/schemas/PaymentsData"
+      title: Payments
+    PaymentsData:
+      type: object
+      properties:
+        payment:
+          type: array
+          items:
+            $ref: "#/components/schemas/paymentSearchResponse"
+      title: PaymentsData
+
+    acquiringCredentials:
+      type: object
+      description: This object contains the acquiring credentials. At least one `dualMessage` object or `singleMessage` object is required.
+      required:
+        - acquiringIca
+      properties:
+        acquiringCountry:
+          type: string
+          description: "The 3-digit ISO 3166-1 alpha-3 country code of the Bank Identification Number (BIN) under which the acquiring member is registered with Mastercard; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes)."
+          example: "USA"
+        acquiringIca:
+          type: string
+          description: The Mastercard-assigned Interbank Card Association (ICA) ID for the acquiring member registered with Mastercard.
+          example: "1234"
+          minimum: 1
+          maximum: 11
+        dualMessage:
+          $ref: "#/components/schemas/dualMessage"
+        singleMessage:
+          $ref: "#/components/schemas/singleMessage"
+      title: acquiringCredentials
+    additionalProgramData:
+      type: object
+      description: This object contains data required for cross-network programs. Contact your Mastercard representative for assistance.
+      properties:
+        crossNetwork:
+          $ref: "#/components/schemas/crossNetwork"
+      title: additionalProgramData
+    address:
+      type: object
+      required:
+        - street
+        - country
+      properties:
+        city:
+          type: string
+          description: The city of the individual or merchant.
+          minimum: 1
+          maximum: 25
+          example: "ofallon"
+        country:
+          type: string
+          description: "The 3-character ISO 3166-1 alpha-3 code for the country of the individual; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes)."
+          example: "USA"
+        postalCode:
+          type: string
+          description: The ZIP Code or postal code of the individual or merchant.
+          example: "6171111111"
+          minimum: 1
+          maximum: 10
+        state:
+          type: string
+          description: State or province of the individual or merchant. If the sender's country is USA or CAN, the country's state or Province is required.
+          example: "MO"
+          minimum: 2
+          maximum: 3
+        street:
+          type: string
+          description: The street address of the individual or merchant.
+          example: "2200 Mastercard Blvd"
+          minimum: 1
+          maximum: 50
+      title: address
+    crossNetwork:
+      type: object
+      properties:
+        walletProviderSignature:
+          type: string
+          minimum: 1
+          maximum: 2058
+          example: "eyJraWQiOiIyM2JjYmU2NGM0YWZiZWIwNDc3MTg3YmQxNTA4MTcwODNlMjY4MGRiYzhiOTVlZmRkZTlhN2M1MTU0YjE3NjRmIiwiYWxnIjoiUlMyNTYifQ.eyJwYXJ0bmVySWQiOiJwdG5yXzFsenMwekQ2NXJvN2stT2RVWGpMV19wRmdYNCIsInBheW1lbnRSZWZlcmVuY2UiOiJyZWZfMTIzNDU2ZGQ3OTEwIiwiYW1vdW50IjoiMTAwMCIsInJlY2lwaWVudEFjY291bnRVcmkiOiJwYW46NTQzMjEyMzQ1Njc4OTAxMjtleHA9MjA5OS0xOSJ9.XO0WEr_Cwb4lYSWui6zYXms6djaQ5fSDMa1D92tHMpM5SytexZzCO9zNVxRYBKDrHsmZoMx9sAShucSaRupT4Ns7KxCykoH-bhwQW7HeoMQbF4kDbRbgAgrajYD3m7_uMWoI4EG51ugcq7UfhQCObig6GEiSGQ6eiavyzdzKQWN-gt4_iPWur9TITX2NJpDQwde2HOB3pgpuC55coWZnmQNePceLDVfj85_ukkrGA4pbXze0pnOgshshQS9Xe6_dk4BmTDH2MNcRf67odqXmnRGIplumA81oBiCWyaDIc6cqUlIOoMVZKWvZCvynTtAloNb18vV2OetBE2a5Mfhkbg"
+      title: crossNetwork
+    dualMessage:
+      type: object
+      description: This object contains details for Dual Message acquiring. At least one of the `dualMessage` or `singleMessage` objects must be provided.
+      required:
+        - acquiringBin
+      properties:
+        acquiringBin:
+          type: string
+          description: The Bank Identification Number (BIN) under which the Acquiring member is registered with Mastercard.
+          minimum: 6
+          maximum: 6
+          example: "123456"
+      title: dualMessage
+    paymentSearchResponse:
+      type: object
+      description: Provides a response to the search query.
+      properties:
+        paymentReference:
+          type: string
+          description: A unique payment transaction reference ID assigned by partner for every transaction.
+          example: "pay_789378"
+        paymentId:
+          type: string
+          description: A unique payment transaction reference ID assigned by Mastercard for every transaction.
+          example: "pid_1248596"
+        transactionStatus:
+          type: string
+          example: "APPROVED"
+          description: "The status of the transaction, which can be one of the following:
+
+          * APPROVED = Transaction approved
+
+          * DECLINED = Transaction declined
+
+          * ERROR = There are validation errors on the API request
+
+          * UNKNOWN = The transaction does not currently have a status due to an issue processing the transaction"
+        transactionStatusReason:
+          type: string
+          description: Present if `transactionStatus` is DECLINED. Provides a reason for the decline.
+          example: "Card Declined"
+        originalTransactionstatus:
+          type: string
+          example: "APPROVED"
+          description: "The status of the transaction, which can be one of the following:
+
+            * APPROVED = Transaction approved
+
+            * DECLINED = Transaction declined, see the `transactionStatusReason` value
+
+            * ERROR = There are validation errors on the API request
+
+            * UNKNOWN = The transaction does not currently have a status due to an issue processing the transaction"
+        transmissionDateTime:
+          type: string
+          format: ISO 8601 DATE
+          description: "The date and time the transaction was processed, as an ISO 8601 timestamp (YYYY-MM-DDTHH:MM:SSZ)."
+          example: "2019-06-17T18:05:02Z"
+        networkResponseCode:
+          type: string
+          description: The network status code, which relates to the `transactionStatus` value, for example 00 (Approved or completed successfully), 54 (Expired card).
+          example: "56"
+        switchSerialNumber:
+          type: string
+          description: A unique transaction identification number (switch serial number) generated or assigned by the Single Message System.
+          maxLength: 9
+          example: "157105207"
+        systemTraceAuditNumber:
+          type: string
+          description: A unique system trace audit number (STAN) for the transaction.
+          maxLength: 6
+          example: "123456"
+        retrievalRequestNumber:
+          type: string
+          description: A unique reference number that identifies the transaction at the network.
+          maxLength: 24
+          example: "123456"
+        authorizationCode:
+          type: string
+          description: A transaction response ID code assigned by the authorizing institution.
+          maxLength: 6
+          example: "E75A5E"
+        fundsAvailability:
+          type: string
+          description: "An estimate of when the funds might be available. Actual Deposit Availability is determined by the financial institution. Valid values:
+
+          * IMMEDIATE
+
+          * SAME_DAY
+
+          * NEXT_CALENDAR_DAY
+
+          * NEXT_BUSINESS_DAY
+
+          * TWO_TO_FIVE_BUSINESS_DAYS
+
+          * UNKNOWN"
+          example: "IMMEDIATE"
+        tokenRequestorId:
+          type: number
+          description: This field contains the ID assigned by the Token Service Provider to the Token Requestor.
+          maxLength: 11
+          example: "ABC123456"
+        uniqueTransactionReference:
+          type: string
+          description: The partner-assigned Unique Transaction Reference number provided in the API request, which helps link the funding, payment and refund transactions relating to a particular funds transfer request.
+          maxLength: 19
+          example: "1234567890"
+        settlementAmount:
+          type: number
+          description: The amount of funds, in the currency identified by the `settlementCurrency` field, to be transferred between the acquirer and the issuer. This should be equal to the transaction amount (in the API request) in the currency of settlement.
+          minLength: 1
+          maxLength: 12
+          example: "1000"
+        settlementCurrency:
+          type: string
+          format: ISO Alpha CURRENCY
+          description: "The 3-character ISO 4217 alpha-3 code identifying the currency for the settlement amount in the `settlementAmount` field. See [Currency Codes](https://developer.mastercard.com/page/iso-4217-currency-codes). For example, for U.S. Dollars, the value is USD."
+          example: "USD"
+        paymentAccountReference:
+          type: string
+          description: The Payment Account Reference (PAR) is a unique value associated with a single PAN and attributed to all tokens associated with that PAN. A PAR can be used to link transactions containing PANs or tokens associated with the same underlying payment account.
+          minLength: 1
+          maxLength: 29
+          example: "1234BE0F9E2464BE28FADBE009AB4"
+        transactionLocalDateTime:
+          type: string
+          format: ISO 8601 DATE
+          description: "The local date and time of the transaction, in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ)."
+          example: "2019-06-17T18:05:02Z"
+        paymentType:
+          type: string
+          description: The payment type for the funds transfer.
+          minLength: 3
+          maxLength: 3
+          example: "P2P"
+        merchantCategoryCode:
+          type: string
+          description: Mastercard defined merchant category code. This identifies the type of business of the merchant. If provided, this merchant category code should match one of the valid codes set by the Mastercard rules. Use 6536 for P2P transactions.
+          minLength: 4
+          maxLength: 4
+          example: "6536"
+        transferAcceptor:
+          $ref: "#/components/schemas/transferAcceptor"
+        acquiringCredentials:
+          $ref: "#/components/schemas/acquiringCredentials"
+        sender:
+          $ref: "#/components/schemas/sender"
+        recipient:
+          $ref: "#/components/schemas/recipient"
+        fundingSource:
+          type: string
+          description: "The funding source for the transaction. Valid values:
+
+          * CREDIT
+
+          * DEBIT
+
+          * PREPAID"
+          example: "CREDIT"
+        amount:
+          type: number
+          description: "The transaction amount, in the currency identified by the `currency` field. The decimal point is implied based on the currency. For example, a $1 transaction will be a value of 100."
+          minLength: 1
+          maxLength: 12
+          example: "6000"
+        currency:
+          type: string
+          format: ISO Alpha CURRENCY
+          description: "The 3-character ISO 4217 alpha-3 code identifying the currency for the transaction amount in the `amount` field. See [Currency Codes](https://developer.mastercard.com/page/iso-4217-currency-codes). For example, for U.S. Dollars, the value is USD."
+          example: "USD"
+        additionalMessage:
+          type: string
+          description: Message a financial institution will associate to the transfer and may display.
+          minLength: 0
+          maxLength: 65
+          example: "Adding additional message"
+        qrData:
+          type: string
+          description: The Mastercard QR data for P2M payments.
+          minLength: 0
+          maxLength: 237
+          example: "12"
+        participationId:
+          type: string
+          description: The participation ID of the Sender. The Receiving Institution will associate the value to the transfer.
+          minLength: 0
+          maxLength: 30
+          example: "1234567890"
+        transactionPurpose:
+          type: string
+          description: "The purpose of the transaction. Valid numeric values:
+
+          * 00 = Family Support
+
+          * 01 = Regular Labor Transfers (expatriates)
+
+          * 02 = Travel & Tourism
+
+          * 03 = Education
+
+          * 04 = Hospitalization and Medical Treatment
+
+          * 05 = Emergency Need
+
+          * 06 = Savings
+
+          * 07 = Gifts
+
+          * 08 = Other
+
+          * 09 – 15 = Reserved"
+          example: "07"
+        deviceType:
+          type: string
+          description: "The initiation channel of the funds transfer request. This value can be defined in the onboarding process instead of passing in every API call. Valid values:
+
+          * WEB
+
+          * MOBILE
+
+          * BANK
+
+          * KIOSK"
+          example: "WEB"
+        additionalProgramData:
+          $ref: "#/components/schemas/additionalProgramData"
+      title: paymentSearchResponse
+
+    networkPreference:
+      type: object
+      properties:
+        messageTypeIndicator:
+          type: string
+          example: "0010"
+        network:
+          type: string
+          example: "MASTERCARD"
+        processingCode:
+          type: string
+          example: "20"
+      title: networkPreference
+    paymentRequest:
+      type: object
+      required:
+        - paymentReference
+        - transactionLocalDateTime
+        - paymentType
+        - merchantCategoryCode
+        - transferAcceptor
+        - currency
+        - amount
+        - acquiringCredentials
+        - sender
+        - recipient
+        - fundingSource
+      properties:
+        acquiringCredentials:
+          $ref: "#/components/schemas/acquiringCredentials"
+        additionalMessage:
+          type: string
+          description: Message a financial institution will associate to the transfer and may display.
+          example: "Adding additional message"
+          maximum: 65
+        additionalProgramData:
+          $ref: "#/components/schemas/additionalProgramData"
+        amount:
+          type: string
+          description: "The transaction amount, in the currency identified by the `currency` field. The decimal point is implied based on the currency. For example, a $1 transaction will be a value of 100."
+          minimum: 1
+          maximum: 12
+          example: "6000"
+        currency:
+          type: string
+          description: "The 3-character ISO 4217 alpha-3 code identifying the currency for the transaction amount in the `amount` field. See [Currency Codes](https://developer.mastercard.com/page/iso-4217-currency-codes). For example, for U.S. Dollars, the value is USD."
+          example: "USD"
+        deviceType:
+          type: string
+          description: "The initiation channel of the funds transfer request. This value can be defined in the onboarding process instead of passing in every API call. Valid values:
+
+          * WEB
+
+          * MOBILE
+
+          * BANK
+
+          * KIOSK"
+          example: "WEB"
+        fundingSource:
+          type: string
+          description: "The funding source for the transaction. Valid values:
+
+          * CREDIT
+
+          * DEBIT
+
+          * PREPAID"
+          example: "CREDIT"
+        merchantCategoryCode:
+          type: string
+          description: Mastercard defined merchant category code. This identifies the type of business of the merchant. If provided, this merchant category code should match one of the valid codes set by the Mastercard rules. Use 6536 for P2P transactions.
+          example: "6536"
+        networkPreference:
+          $ref: "#/components/schemas/networkPreference"
+        participationId:
+          type: string
+          description: The participation ID of the Sender. The Receiving Institution will associate the value to the transfer.
+          example: "1234567890"
+          maximum: 30
+        routingTransitNumber:
+          type: string
+          example: "123456789"
+        paymentReference:
+          type: string
+          description: A unique transaction reference ID for the transaction. This value is assigned by the partner and must be unique for each API request to create a transaction. This value is not passed to the Mastercard Core network.
+          minimum: 1
+          maximum: 40
+          example: "pay_789378"
+        paymentType:
+          type: string
+          description: "The appropriate payment type for the funds transfer taking place. Valid values:
+
+          * A2A = Account to account
+
+          * ACO = Agent cash out
+
+          * AMS = Acquirer Merchant Settlement
+
+          * B2C = Merchant disbursement
+
+          * BDB = Funds disbursement (general)
+
+          * CBP = Card bill payment
+
+          * G2C = Disbursement (Government/Development Organization to consumer)
+
+          * GDB = Government disbursement
+
+          * P2M = Merchant payment
+
+          * P2P = Person to person
+
+          * PSM = Person to small merchant"
+          example: "P2P"
+        qrData:
+          type: string
+          description: The Mastercard QR data for P2M payments.
+          maximum: 237
+          example: "12"
+        recipient:
+          $ref: "#/components/schemas/recipient"
+
+        sender:
+          $ref: "#/components/schemas/sender"
+        transactionLocalDateTime:
+          type: string
+          description: "The local date and time of the transaction, in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ)."
+          example: "2019-06-17T18:05:02Z"
+        transactionPurpose:
+          type: string
+          description: "The purpose of the transaction. Valid numeric values:
+
+          * 00 = Family Support
+
+          * 01 = Regular Labor Transfers (expatriates)
+
+          * 02 = Travel & Tourism
+
+          * 03 = Education
+
+          * 04 = Hospitalization and Medical Treatment
+
+          * 05 = Emergency Need
+
+          * 06 = Savings
+
+          * 07 = Gifts
+
+          * 08 = Other
+
+          * 09 – 15 = Reserved"
+          example: "07"
+        transferAcceptor:
+          $ref: "#/components/schemas/transferAcceptor"
+        uniqueTransactionReference:
+          type: string
+          description: A partner-assigned Unique Transaction Reference number that helps link the funding, payment and refund transactions relating to a particular funds transfer request. Provide the Transaction ID that was used in the funding transaction.
+          example: "1234567890"
+          maximum: 19
+      title: paymentRequest
+    paymentResponse:
+      type: object
+      properties:
+        authorizationCode:
+          type: string
+          description: A transaction response ID code assigned by the authorizing institution.
+          example: "E75A5E"
+        fundsAvailability:
+          type: string
+          description: "An estimate of when the funds might be available. Actual Deposit Availability is determined by the financial institution. Valid values:
+
+          * IMMEDIATE
+
+          * SAME_DAY
+
+          * NEXT_CALENDAR_DAY
+
+          * NEXT_BUSINESS_DAY
+
+          * TWO_TO_FIVE_BUSINESS_DAYS
+
+          * UNKNOWN"
+          example: "IMMEDIATE"
+        messageTypeIndicator:
+          type: string
+          example: "0010"
+        networkResponseCode:
+          type: string
+          description: The network status code, which relates to the `transactionStatus` value, for example 00 (Approved or completed successfully), 54 (Expired card).
+          example: "56"
+        paymentAccountReference:
+          type: string
+          description: The Payment Account Reference (PAR) is a unique value associated with a single PAN and attributed to all tokens associated with that PAN. A PAR can be used to link transactions containing PANs or tokens associated with the same underlying payment account.
+          example: "1234BE0F9E2464BE28FADBE009AB4"
+        paymentReference:
+          type: string
+          description: The unique transaction reference ID provided by the partner when this transaction was requested.
+          example: "pay_789378"
+        processingCode:
+          type: string
+          example: "28"
+        retrievalRequestNumber:
+          type: string
+          description: A unique reference number that identifies the transaction at the network.
+          example: "123456"
+        paymentId:
+          type: string
+          description: A unique payment transaction reference ID assigned by Mastercard for every transaction.
+          example: "pid_1248596"
+        settlementAmount:
+          type: string
+          description: The amount of funds, in the currency identified by the `settlementCurrency` field, to be transferred between the acquirer and the issuer. This should be equal to the transaction amount (in the API request) in the currency of settlement.
+          example: "1000"
+        settlementCurrency:
+          type: string
+          description: "The 3-character ISO 4217 alpha-3 code identifying the currency for the settlement amount in the `settlementAmount` field. See [Currency Codes](https://developer.mastercard.com/page/iso-4217-currency-codes). For example, for U.S. Dollars, the value is USD."
+          example: "USD"
+        switchSerialNumber:
+          type: string
+          description: A unique transaction identification number (switch serial number) generated or assigned by the Single Message System.
+          example: "157105207"
+        systemTraceAuditNumber:
+          type: string
+          description: A unique system trace audit number (STAN) for the transaction.
+          example: "123456"
+        tokenRequestorId:
+          type: string
+          description: This field contains the ID assigned by the Token Service Provider to the Token Requestor.
+          example: "ABC123456"
+        transactionStatus:
+          type: string
+          description: "The status of the transaction, which can be one of the following:
+
+          * APPROVED = Transaction approved
+
+          * DECLINED = Transaction declined, see the `transactionStatusReason` value
+
+          * ERROR = There are validation errors on the API request
+
+          * UNKNOWN = The transaction does not currently have a status due to an issue processing the transaction"
+          example: "APPROVED"
+        transactionStatusReason:
+          type: string
+          description: Present if `transactionStatus` is DECLINED. Provides a reason for the decline.
+          example: "Card Declined"
+        transmissionDateTime:
+          type: string
+          description: "The date and time the transaction was processed, as an ISO 8601 timestamp (YYYY-MM-DDTHH:MM:SSZ)."
+          example: "2019-06-17T18:05:02Z"
+        uniqueTransactionReference:
+          type: string
+          description: The partner-assigned Unique Transaction Reference number provided in the API request, which helps link the funding, payment and refund transactions relating to a particular funds transfer request.
+          example: "1234567890"
+      title: paymentResponse
+
+    paymentSearch:
+      type: object
+      description: This object provides information on the search.
+      properties:
+        paymentID:
+          type: string
+          description: A unique payment transaction reference ID assigned by Mastercard for every transaction.
+          example: "pid_1248596"
+        paymentReference:
+          type: string
+          description: A unique payment transaction reference ID assigned by the partner for every transaction.
+          example: "pay_789378"
+      title: paymentSearch
+
+    payments:
+      type: object
+      properties:
+        payments:
+          $ref: "#/components/schemas/Payments"
+      title: payments
+      description: Get payment by reference model
+    recipient:
+      type: object
+      required:
+        - name
+        - accountUri
+      properties:
+        accountUri:
+          type: string
+          required:
+            - schema
+            - account-number
+            - exp
+          description: "URI identifying the receiving account. URI scheme can be PAN or RAW. Construct the URI string using the following properties and values. Start with `schema:account-number` and append subsequent `property=value` couplets using a semi-colon (;) separator.
+
+          * schema = A 3-character alpha code identifying the type of account number. Valid values:
+
+            <br>– pan = PAN or token
+
+            <br>– raw = Deposit account or generic account number that is not a PAN
+
+          * account-number = The account number. Can be up to 20 digits. For PAN or token, the value should be 16 digits.
+
+          * exp = The expiration date, in format YYYY-MM, for example 2020-10. Required for pan schema.
+
+          * cvc = The Card Verification Code (CVC).
+
+          * ucaf = The Universal Cardholder Authentication Field (UCAF).
+
+          * cavv = The Cardholder Authentication Verification Value (CAVV).
+
+          * cryptogramType = Valid values:
+
+            <br>– CONTACTLESS_CHIP = The shared cryptogram is the result of a contactless tap and chip information is read by the terminal
+
+            <br>– CONTACTLESS_MAGSTRIPE = The shared cryptogram is the result of a contactless tap and the magstripe information is read by the terminal
+
+            <br>– DSRP_UCAF = The shared cryptogram is the result of an in-app purchase and chip information to be passed is in the UCAF field
+
+            <br>– DSRP_CHIP = The shared cryptogram is the result of an in-app purchase using EMV data
+
+          * cryptogramValue = The cryptogram, in one of the following formats, depending on the `cryptogramType`. Required for pan schema:
+
+            <br>– CONTACTLESS_CHIP or CONTACTLESS_MAGSTRIPE: Hexadecimal [A-F0-9], 2–510 characters length
+
+            <br>– DSRP_UCAF: Base64 [A-Za-z0-9+/=?:], 1–510 characters length
+
+            <br>– DSRP_CHIP: Hexadecimal [A-F0-9], 2–510 characters length
+
+          * panSequenceNumber = The PAN Sequence Number, which distinguishes among separate cards having the same PAN. Processors with chip-reading capability may pass this information for Contactless Chip and Contactless Magstripe transactions."
+
+          example: "pan:5111222233334444;exp=2020-10;cvc=123;ucaf=ABC;cavv=123;cryptogramType=DSRP_CHIP;cryptogramValue=341341341;panSequenceNumber=01"
+        address:
+          $ref: "#/components/schemas/address"
+        countryOfBirth:
+          type: string
+          description: "The 3-character ISO 3166-1 alpha-3 code for the country in which the Recipient was born; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes)."
+          example: "USA"
+        dateOfBirth:
+          type: string
+          description: "The date of birth of the Recipient, in ISO 8601 full date format (YYYY-MM-DD). For example, if the date is 27 March 1981, the value is 1981-03-27."
+          example: "1981-03-27"
+        email:
+          type: string
+          description: The email address of the Recipient. This should be provided if the partner is set up to receive notifications.
+          example: "jane.doe@mastercard.com"
+          maximum: 254
+        governmentIdUris:
+          type: array
+          required:
+            - schema
+            - id-number
+          items:
+            type: string
+            description: "The `governmentIdUris` field can contain an array of data strings, which each identify a Government ID number for the Recipient. Construct each data string using the following properties and values. Start with `schema:id-number` and append subsequent `property=value` couplets using a semi-colon (;) separator.
+
+            * schema = A 3-character alpha code identifying the type of Government ID. Valid values:
+
+              <br>– ppn = Passport Number
+
+              <br>– ssn = Social Security Number
+
+              <br>– ein = Employer Identification Number
+
+              <br>– tin = Tax Identification Number
+
+              <br>– aln = Alien Registration Number
+
+              <br>– cus = Customer Number
+
+              <br>– idc = Identity Card Number
+
+              <br>– dln = Drivers License Number
+
+              <br>– nat = National ID
+
+            * id-number = The Government ID number/value. Can be 2–80 alpha-numeric characters, including special characters hyphen (-) and forward slash (/), for example F/4611211-234.
+
+              <br>For a Social Security Number, the value should be 9 digits only.
+
+            * expiration-date = The expiration date for the Government ID, in ISO 8601 full date format (YYYY-MM-DD). For example, if the date is 30 March 2020, the value is 2020-03-30.
+
+              <br>If the Government ID type expires in a particular month (rather than on a specific day), populate the date as the first or last day of that month (whichever is appropriate).
+
+            * issue-date = The issuing date for the Government ID, in ISO 8601 full date format (YYYY-MM-DD).For example, if the date is 31 January 2008, the value is 2008-01-31.
+
+              <br>The issuing date cannot be a future date. If the Government ID type was issued in a particular month (rather than on a specific day), populate the date as the first or last day of that month (whichever is appropriate).
+
+            * issuing-country - The 3-character ISO 3166-1 alpha-3 country code representing the country that issued the Government ID; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes).
+
+            * issuing-place = The name of the place (city, state or province) that issued the Government ID, for example Montreal."
+
+            example: "dln:NHL12506717;expiration-date=2022-01-02;issue-date=2017-01-11;issuing-country=USA;issuing-place=New Hampshire"
+        name:
+          type: string
+          description: "The full name of the Recipient. Recommended format: Last Name/Family Name + space + First Name + space. For example, for John Smith the value is ‘Smith John ’."
+          example: "Smith John "
+          minimum: 1
+          maximum: 70
+        nationality:
+          type: string
+          description: "The 3-character ISO 3166-1 alpha-3 code for the country in which the Recipient is a citizen; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes)."
+          example: "USA"
+        phone:
+          type: string
+          description: The phone number of the reciever. Phone number or email address should be provided if the partner is set up to receive notifications.
+          example: "1234567890"
+          maximum: 15
+      title: recipient
+    sender:
+      type: object
+      required:
+        - name
+        - address
+        - accountUri
+      properties:
+        accountUri:
+          type: string
+          required:
+            - schema
+            - account-number
+            - exp
+          description: "URI identifying the sending account. URI scheme can be PAN or RAW. Construct the URI string using the following properties and values. Start with `schema:account-number` and append subsequent `property=value` couplets using a semi-colon (;) separator.
+
+          * schema = A 3-character alpha code identifying the type of account number. Valid values:
+
+            <br>– pan = PAN or token
+
+            <br>– raw = Deposit account or generic account number that is not a PAN
+
+          * account-number = The account number. Can be up to 20 digits. For PAN or token, the value should be 16 digits.
+
+          * exp = The expiration date, in format YYYY-MM, for example 2020-10. Required for pan schema.
+
+          * cvc = The Card Verification Code (CVC).
+
+          * ucaf = The Universal Cardholder Authentication Field (UCAF).
+
+          * cavv = The Cardholder Authentication Verification Value (CAVV).
+
+          * cryptogramType = Valid values:
+
+            <br>– CONTACTLESS_CHIP = The shared cryptogram is the result of a contactless tap and chip information is read by the terminal
+
+            <br>– CONTACTLESS_MAGSTRIPE = The shared cryptogram is the result of a contactless tap and the magstripe information is read by the terminal
+
+            <br>– DSRP_UCAF = The shared cryptogram is the result of an in-app purchase and chip information to be passed is in the UCAF field
+
+            <br>– DSRP_CHIP = The shared cryptogram is the result of an in-app purchase using EMV data
+
+          * cryptogramValue = The cryptogram, in one of the following formats, depending on the `cryptogramType`. Required for pan schema:
+
+            <br>– CONTACTLESS_CHIP or CONTACTLESS_MAGSTRIPE: Hexadecimal [A-F0-9], 2–510 characters length
+
+            <br>– DSRP_UCAF: Base64 [A-Za-z0-9+/=?:], 1–510 characters length
+
+            <br>– DSRP_CHIP: Hexadecimal [A-F0-9], 2–510 characters length
+
+          * panSequenceNumber = The PAN Sequence Number, which distinguishes among separate cards having the same PAN. Processors with chip-reading capability may pass this information for Contactless Chip and Contactless Magstripe transactions."
+
+          example: "pan:5111222233334444;exp=2020-10;cvc=123;ucaf=ABC;cavv=123;cryptogramType=DSRP_CHIP;cryptogramValue=341341341;panSequenceNumber=01"
+        address:
+          $ref: "#/components/schemas/address"
+        countryOfBirth:
+          type: string
+          description: "The 3-character ISO 3166-1 alpha-3 code for the country in which the Sender was born; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes)."
+          example: "USA"
+        dateOfBirth:
+          type: string
+          description: "The date of birth of the Sender, in ISO 8601 full date format (YYYY-MM-DD). For example, if the date is 27 March 1981, the value is 1981-03-27."
+          example: "1981-03-27"
+        digitalAccountReferenceNumber:
+          type: string
+          description: URI to identify the digital account reference number. URI scheme must be PAN.
+          example: "pan:5432123456789012;exp=2050-02;cvc=123"
+        email:
+          type: string
+          description: The email address of the Sender. This should be provided if the partner is set up to receive notifications.
+          example: "jane.doe@mastercard.com"
+          minimum: 5
+          maximum: 254
+        governmentIdUris:
+          type: array
+          required:
+            - schema
+            - id-number
+          items:
+            type: string
+            description: "The `governmentIdUris` field can contain an array of data strings, which each identify a Government ID number for the Sender. Construct each data string using the following properties and values. Start with `schema:id-number` and append subsequent `property=value` couplets using a semi-colon (;) separator.
+
+            * schema = A 3-character alpha code identifying the type of Government ID. Valid values:
+
+              <br>– ppn = Passport Number
+
+              <br>– ssn = Social Security Number
+
+              <br>– ein = Employer Identification Number
+
+              <br>– tin = Tax Identification Number
+
+              <br>– aln = Alien Registration Number
+
+              <br>– cus = Customer Number
+
+              <br>– idc = Identity Card Number
+
+              <br>– dln = Drivers License Number
+
+              <br>– nat = National ID
+
+            * id-number = The Government ID number/value. Can be 2–80 alpha-numeric characters, including special characters hyphen (-) and forward slash (/), for example F/4611211-234.
+
+              <br>For a Social Security Number, the value should be 9 digits only.
+
+            * expiration-date = The expiration date for the Government ID, in ISO 8601 full date format (YYYY-MM-DD). For example, if the date is 30 March 2020, the value is 2020-03-30.
+
+              <br>If the Government ID type expires in a particular month (rather than on a specific day), populate the date as the first or last day of that month (whichever is appropriate).
+
+            * issue-date = The issuing date for the Government ID, in ISO 8601 full date format (YYYY-MM-DD).For example, if the date is 31 January 2008, the value is 2008-01-31.
+
+              <br>The issuing date cannot be a future date. If the Government ID type was issued in a particular month (rather than on a specific day), populate the date as the first or last day of that month (whichever is appropriate).
+
+            * issuing-country - The 3-character ISO 3166-1 alpha-3 country code representing the country that issued the Government ID; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes).
+
+            * issuing-place = The name of the place (city, state or province) that issued the Government ID, for example Montreal."
+
+            example: "dln:NHL12506717;expiration-date=2022-01-02;issue-date=2017-01-11;issuing-country=USA;issuing-place=New Hampshire"
+        name:
+          type: string
+          description: "The full name of the Sender. Recommended format: Last Name/Family Name + space + First Name + space. For example, for Jane Smith the value is ‘Smith Jane ’."
+          example: "Smith Jane "
+          minimum: 1
+          maximum: 70
+        nationality:
+          type: string
+          description: "The 3-character ISO 3166-1 alpha-3 code for the country in which the Sender is a citizen; see [Country Codes](https://developer.mastercard.com/page/iso-3166-country-and-currency-codes)."
+          example: "USA"
+        phone:
+          type: string
+          description: The phone number of the Sender. This should be provided if the partner is set up to receive notifications.
+          example: "1234567890"
+          minimum: 1
+          maximum: 20
+      title: sender
+    singleMessage:
+      type: object
+      description: This object contains details for Single Message acquiring. At least one of the `dualMessage` or `singleMessage` objects must be provided.
+      required:
+        - processorId
+        - acquiringIdentificationCode
+      properties:
+        acquiringIdentificationCode:
+          type: string
+          description: The 9-digit Federal Reserve Routing and Transit Number (RTN) of the acquiring member, or the 9-digit pseudo-number assigned to the acquiring member by Mastercard.
+          example: "123456"
+          minimum: 1
+          maximum: 9
+        processorId:
+          type: string
+          description: A 10-digit number of the format 9000xxxxxx, where xxxxxx is the Single Message System-assigned processor ID. For example, if the processor ID is 123456, this value is 9000123456.
+          example: "9000123456"
+          maximum: 10
+      title: singleMessage
+    transferAcceptor:
+      type: object
+      description: This object contains details of the Transfer Acceptor, who is the merchant or originator providing the funds transfer service to the Sender.
+      required:
+        - address
+        - id
+        - terminalId
+      properties:
+        address:
+          $ref: "#/components/schemas/address"
+        convenienceAmount:
+          type: string
+          description: Tip or convenience amount, in the transaction currency identified by the `currency` field. The decimal point is implied based on the currency. For example, a $1 tip will be a value of 100. This field is relevant to P2M payments and if it is provided, the `convenienceIndicator` field is also required.
+          example: "333"
+          minimum: 1
+          maximum: 12
+        convenienceIndicator:
+          type: string
+          description: "Convenience fee type code, which is required if the `convenienceAmount` field is provided. Valid values:
+
+          * 01 = Tip
+
+          * 02 = A flat convenience fee
+
+          * 03 = A percentage convenience fee"
+          example: "01"
+        id:
+          type: string
+          description: An identifier for the card acceptor. This value should be unique for each originator.
+          example: "456487898368"
+          minimum: 1
+          maximum: 15
+        mastercardAssignedMerchantId:
+          type: string
+          description: The Merchant ID assigned by Mastercard.
+          example: "12A346"
+        name:
+          type: string
+          description: The business name of the merchant/originator, which will be shown on the Recipient’s statement.
+          example: "transferacceptor"
+          minimum: 1
+          maximum: 15
+        paymentFacilitatorId:
+          type: string
+          description: The Company ID for the Payment Facilitator, if one is involved in the transaction. This ID is assigned by Mastercard when the service provider registers with Mastercard as a Payment Facilitator.
+          example: "123"
+          maximum: 11
+        subMerchantId:
+          type: string
+          description: Must be the Merchant ID of the sub-merchant when a payment facilitator is involved in the transaction. This value is assigned by the payment facilitator or their acquirer.
+          example: "223"
+          maximum: 15
+        terminalId:
+          type: string
+          description: The identifier for the terminal at a card acceptor location. If sending transactions from a card not present environment, use the same value for all transactions.
+          example: "1367-hgf"
+          minimum: 1
+          maximum: 8
+      title: transferAcceptor
