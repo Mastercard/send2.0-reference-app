@@ -38,7 +38,7 @@ public class SendApiConfig {
         PrivateKey signingKey = AuthenticationUtils.loadSigningKey(signingKeyFilePath, signingKeyAlias, signingKeyPassword);
 
         ApiClient client = new ApiClient();
-        client.setBasePath("https://sandbox.api.mastercard.com"); //for mtf environment use: https://mtf.api.mastercard.com
+        client.setBasePath("https://mtf.api.mastercard.com"); //for sandbox environment use: https://sandbox.api.mastercard.com; for production, use https://api.mastercard.com
         client.setDebugging(true);
 
 
