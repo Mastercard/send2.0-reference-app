@@ -36,7 +36,7 @@ public class ApplicationTests {
 	@Test
 	public void testCreatePaymentFailure() throws Exception {
 		PaymentRequestWrapper paymentRequestWrapper = RequestBuilder.createPrefilledWrapper();
-		paymentRequestWrapper.setMerchantCategoryCode("3333"); // some invalid value
+		paymentRequestWrapper.setMerchantCategoryCode("33333"); // some invalid value
 		mvc.perform(post("/submitForm").flashAttr("paymentRequestWrapper", paymentRequestWrapper)
 		.contentType(MediaType.APPLICATION_FORM_URLENCODED))
 				.andExpect(MockMvcResultMatchers.flash().attribute("error", "Error creating payment"))
