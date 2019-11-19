@@ -43,26 +43,4 @@ public class ApplicationTests {
 				.andExpect(redirectedUrl("/"));
 
 	}
-
-	@Test
-	public void testSenderEligibilityFailure() throws Exception {
-		PaymentRequestWrapper paymentRequestWrapper = RequestBuilder.createPrefilledWrapper();
-		paymentRequestWrapper.setSenderUriIdentifier("1111222233334444"); // Some invalid value
-		mvc.perform(post("/submitForm").flashAttr("paymentRequestWrapper", paymentRequestWrapper)
-		.contentType(MediaType.APPLICATION_FORM_URLENCODED))
-				.andExpect(MockMvcResultMatchers.flash().attribute("error", "The sender is not eligible for transfers. "))
-				.andExpect(redirectedUrl("/"));
-
-	}
-
-	@Test
-	public void testRecipientEligibilityFailure() throws Exception {
-		PaymentRequestWrapper paymentRequestWrapper = RequestBuilder.createPrefilledWrapper();
-		paymentRequestWrapper.setRecipientUriIdentifier("1111222233334444"); // Some invalid value
-		mvc.perform(post("/submitForm").flashAttr("paymentRequestWrapper", paymentRequestWrapper)
-		.contentType(MediaType.APPLICATION_FORM_URLENCODED))
-				.andExpect(MockMvcResultMatchers.flash().attribute("error", "The recipient is not eligible for transfers. "))
-				.andExpect(redirectedUrl("/"));
-
-	}
 }
