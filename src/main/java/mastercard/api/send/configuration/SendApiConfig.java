@@ -43,7 +43,7 @@ public class SendApiConfig {
 
 
         List<Interceptor> interceptors = client.getHttpClient().networkInterceptors();
-        interceptors.add(new ForceJsonResponseInterceptor());
+        //interceptors.add(new ForceJsonResponseInterceptor());
         interceptors.add(new OkHttp2OAuth1Interceptor(consumerKey, signingKey));
 
         return client;
